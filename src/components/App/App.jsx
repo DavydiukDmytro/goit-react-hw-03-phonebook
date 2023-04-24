@@ -3,20 +3,38 @@ import { ContactList } from 'components/ContactList';
 import { Form } from 'components/Form';
 import { Filter } from 'components/Filter';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
-import { Container, TitleH1, TitleH2 } from './App.styled';
+import { Container, TitleH1, TitleH2, Text } from './App.styled';
+
+const KEY_LOCAL_STORAGE = 'phone-book';
 
 export class App extends Component {
   initState = {
-    contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ],
+    contacts: [],
     filter: '',
   };
 
   state = { ...this.initState };
+
+  componentDidMount() {
+    const contacts = JSON.parse(localStorage.getItem(KEY_LOCAL_STORAGE));
+    if (contacts)
+      this.setState({
+        contacts,
+        filter: '',
+      });
+    else {
+      this.setState({
+        ...this.initState,
+      });
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    const { contacts } = this.state;
+    if (prevState.contacts !== contacts) {
+      localStorage.setItem(KEY_LOCAL_STORAGE, JSON.stringify(contacts));
+    }
+  }
 
   addContact = newContact => {
     const isContact = this.state.contacts.find(
@@ -52,7 +70,7 @@ export class App extends Component {
     );
 
   render() {
-    const { filter } = this.state;
+    const { filter, contacts } = this.state;
     const { addContact, handleChangeValueInState, deleteContact, filterArr } =
       this;
     return (
@@ -61,7 +79,11 @@ export class App extends Component {
         <Form onSubmitAdd={addContact} />
         <Filter filter={filter} onKeyClick={handleChangeValueInState} />
         <TitleH2>Contacts</TitleH2>
-        <ContactList onDelete={deleteContact} contactArr={filterArr()} />
+        {contacts.length !== 0 ? (
+          <ContactList onDelete={deleteContact} contactArr={filterArr()} />
+        ) : (
+          <Text>No contacts</Text>
+        )}
       </Container>
     );
   }
